@@ -1,157 +1,140 @@
 # Real-Time Speech-to-Text Streaming API
-## Product Requirements Document (PRD)
 
-### 1. Overview
-#### 1.1 Product Purpose
-To provide a high-performance, real-time speech-to-text API with low latency (< 200ms) that supports continuous audio streaming, voice activity detection, and wake word functionality.
+trade off  between real time and main model : 
+1. Real time model is optimized for low latency (< 200ms) and high throughput.
+2. Main time model is optimized for high accuracy and low latency.
 
-# 1. WebSocket Channels
-CONTROL_CHANNEL = "wss://api.example.com/v1/stream/control"
-AUDIO_CHANNEL = "wss://api.example.com/v1/stream/audio"
+[Deepgram](https://developers.deepgram.com/docs/live-streaming-audio)
+[AssemblyAI](https://www.assemblyai.com/docs/api-reference/streaming/realtime)
 
-# 2. Configuration Schema
 
-# REQUIRED PARAMETERS
-REQUIRED_CONFIG = {
-    "language": "en",              # Language code
-    "sample_rate": 16000,         # Audio sample rate
-    "encoding": "PCM"             # Audio encoding format
+## Overview
+A high-performance, real-time speech-to-text streaming API delivering transcriptions with ultra-low latency (<200ms).
+
+### Models
+- **Real-time Model**: Optimized for low latency (<200ms) and high throughput
+- **Main Model**: Optimized for high accuracy with reasonable latency
+
+## WebSocket Endpoints
+
+```json
+{
+    "CONTROL_CHANNEL": "wss://api.com/v1/stream/control",
+    "AUDIO_CHANNEL": "wss://api.com/v1/stream/audio"
 }
+```
 
-# DEFAULT CONFIGURATION
-DEFAULT_CONFIG = {
-    # Core Settings
-    "model": "base",              # tiny, base, small, medium, large-v1, large-v2
-    "compute_type": "default",    # default, int8, float16
-    "device": "cuda",             # cuda or cpu
-    "gpu_device_index": 0,
-    
-    # Audio Processing
-    "channels": 1,
-    "buffer_size": 512,
-    "handle_buffer_overflow": True,
-    "allowed_latency_limit": 100,
-    
-    # Voice Activity Detection (VAD)
+## Authentication Requirements
+
+```json
+{
+    "REQUIRED_CONFIG": {
+        "API_OR_JWT": "Token",
+        "client_id": "123",
+        "session_id": "session_id"
+    }
+}
+```
+
+## Audio Requirements
+
+```json
+{
+    "AUDIO_CONFIG": {
+        "language": "en",
+        "sample_rate": 16000,
+        "encoding": "PCM",
+        "channels": 1
+    }
+}
+```
+
+## Configuration Options
+
+```json
+{
+    "core_settings": {
+        "model": "base",
+        "compute_type": "default",
+        "device": "cuda",
+        "gpu_device_index": 0,
+        "batch_size": 16,
+        "language": "en",
+        "initial_prompt": null
+    },
+    "audio_processing": {
+        "channels": 1,
+        "buffer_size": 512,
+        "sample_rate": 16000,
+        "handle_buffer_overflow": true,
+        "allowed_latency_limit": 200,
+        "input_device_index": null
+    },
     "vad": {
-        "enabled": True,
+        "enabled": true,
         "silero": {
-            "enabled": True,
+            "enabled": true,
             "sensitivity": 0.4,
-            "use_onnx": False
+            "use_onnx": false
         },
         "webrtc": {
-            "enabled": True,
+            "enabled": true,
             "sensitivity": 3
         },
         "post_speech_silence": 0.6,
         "min_speech_duration": 0.5
     },
-
-    # Wake Word Detection
-    "wake_word": {
-        "enabled": False,
-        "backend": "pvporcupine",      # pvporcupine or openwakeword
-        "words": [],                   # List of wake words
-        "sensitivity": 0.6,
-        "activation_delay": 0.0,
-        "timeout": 5.0,
-        "buffer_duration": 0.1
-    },
-
-    # Enhanced Features
     "features": {
-        # Transcription Features
-        "interim_results": True,
-        "speaker_diarization": False,
-        
-        # Analysis Features
+        "interim_results": true,
+        "speaker_diarization": false,
         "sentiment_analysis": {
-            "enabled": False,
-            "granularity": "sentence",  # sentence or word
+            "enabled": false,
+            "granularity": "sentence",
             "min_confidence": 0.6
         },
         "topic_detection": {
-            "enabled": False,
+            "enabled": false,
             "min_confidence": 0.6
-        },
-        "text_summarization": {
-            "enabled": False,
-            "max_length": 100,
-            "style": "bullets"          # bullets or paragraph
-        },
-        "intent_identification": {
-            "enabled": False,
-            "confidence_threshold": 0.7
         }
     },
-
-    # Content Filtering
-    "filters": {
-        "profanity": {
-            "enabled": False,
-            "replacement_char": "*",
-            "sensitivity": "medium"      # low, medium, high
-        }
-    },
-
-    # Output Formatting
     "formatting": {
-        "ensure_sentence_starting_uppercase": True,
-        "ensure_sentence_ends_with_period": True,
-        "print_transcription_time": False
-    },
-
-    # Stream Control
-    "auto_stop": {
-        "enabled": False,
-        "timeout": 30,                  # Stop after N seconds of silence
-        "max_duration":              # Maximum recording duration
+        "ensure_sentence_starting_uppercase": true,
+        "ensure_sentence_ends_with_period": true,
+        "print_transcription_time": false
     }
 }
+```
 
-# 3. Message Types
+## API Communication
 
-## Control Channel Messages
+### Control Commands
 
-# Start Stream
+```json
 {
-    "command": "start_stream",
-    "config": {
-        # Required parameters
-        "language": "en",
-        "sample_rate": 16000,
-        "encoding": "PCM",
-        
-        # Optional features
-        "wake_word": {
-            "enabled": True,
-            "words": ["hey assistant"]
+    "commands": {
+        "start_stream": {
+            "command": "start_stream",
+            "audio_start": "2024-03-20T10:30:35.123Z"
         },
-        "features": {
-            "speaker_diarization": True,
-            "sentiment_analysis": {
-                "enabled": True,
-                "granularity": "sentence"
-            }
+        "stop_stream": {
+            "command": "stop_stream",
+            "audio_end": "2024-03-20T10:30:45.123Z"
+        },
+        "pause_stream": {
+            "command": "pause_stream"
+        },
+        "resume_stream": {
+            "command": "resume_stream"
         }
     }
 }
+```
 
-# Control Commands
-{
-    "command": "stop_stream"
-}
-{
-    "command": "pause_stream"
-}
-{
-    "command": "resume_stream"
-}
+### Response Messages
 
-## Audio Channel Messages
+#### Partial Results
 
-# Partial Results
+```json
 {
     "type": "partial_result",
     "data": {
@@ -159,38 +142,39 @@ DEFAULT_CONFIG = {
         "confidence": 0.85,
         "timestamp": "2024-03-20T10:30:45.123Z",
         "is_final": false,
-        "speaker": "speaker_1",         # if speaker_diarization enabled
-        "wake_word_detected": "hey assistant"  # if wake_word enabled
+        "audio_start": "2024-03-20T10:30:35.123Z",
+        "audio_current": "2024-03-20T10:30:45.123Z",
+        "speaker": "speaker_1",
+        "wake_word_detected": "hey assistant"
     }
 }
+```
 
-# Final Results
+#### Final Results
+
+```json
 {
     "type": "final_result",
     "data": {
-        # Core Results
         "text": "final transcription",
         "is_final": true,
         "confidence": 0.95,
-        "duration": 10.5,
-        "timestamp": {
+        "audio": {
             "start": "2024-03-20T10:30:35.123Z",
-            "end": "2024-03-20T10:30:45.123Z"
+            "end": "2024-03-20T10:30:45.123Z",
+            "duration": 10.5
         },
-
-        # Speaker Information (if enabled)
+        "timestamp": "2024-03-20T10:30:45.123Z",
         "speakers": {
             "count": 2,
             "details": [
                 {
                     "id": "speaker_1",
                     "speaking_time": 6.5,
-                    "segments": [...]
+                    "segments": []
                 }
             ]
         },
-
-        # Enhanced Analysis (if enabled)
         "analysis": {
             "sentiment": {
                 "overall": {
@@ -209,23 +193,10 @@ DEFAULT_CONFIG = {
                 {
                     "topic": "technology",
                     "confidence": 0.9,
-                    "mentions": [...]
+                    "mentions": []
                 }
-            ],
-            "summary": {
-                "style": "bullets",
-                "points": [
-                    "First key point",
-                    "Second key point"
-                ]
-            },
-            "intent": {
-                "type": "question",
-                "confidence": 0.85
-            }
+            ]
         },
-
-        # Content Filtering Results (if enabled)
         "filters": {
             "profanity": {
                 "detected": false,
@@ -234,17 +205,4 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-# Status Updates
-{
-    "type": "status",
-    "data": {
-        "event": "recording_start|recording_stop|vad_detect|wake_word_detected",
-        "timestamp": "2024-03-20T10:30:45.123Z",
-        "details": {
-            "wake_word": "hey assistant",  # if applicable
-            "auto_stop_reason": "silence_timeout",  # if applicable
-            "processing_latency": 150
-        }
-    }
-}
+```
