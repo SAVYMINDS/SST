@@ -45,6 +45,18 @@ A high-performance, real-time speech-to-text streaming API delivering transcript
         "sample_rate": 16000,
         "encoding": "PCM",
         "channels": 1
+        "chunk size" : 512.
+        "audio_format": {
+            "accepted_types": ["raw", "wav", "ogg", "mp3"],
+            "streaming_chunk_format": "raw_pcm"
+        },
+        "streaming_config": {
+            "max_chunk_size_bytes": 8192, (need to verify)
+            "chunk_duration_ms": 100,(need to verify)
+            "continuous_streaming": true(need to verify)
+        }
+    }
+}
     }
 }
 ```
